@@ -1,6 +1,6 @@
 "use client";
 
-import { accountActivation } from "@/app/actions/advanced/auth.action";
+import { accountActivation } from "@/app/actions/auth.action";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,

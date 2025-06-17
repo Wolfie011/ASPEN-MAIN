@@ -1,5 +1,5 @@
 import { AppSidebar } from "@/components/nav/app-sidebar";
-import NextBreadcrumb from "@/components/breadcrumbs/NextBreadcrumb";
+import NextBreadcrumb from "@/components/breadcrumb/NextBreadcrumb";
 // import { AccountActivationDialog } from "@/components/forms/activate-account-form";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";

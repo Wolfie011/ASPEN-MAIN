@@ -30,7 +30,7 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from "@/components/ui/tooltip";
-import { SignOutForm } from "@/components/forms/sign-out-form";
+import { SignOutForm } from "@/components/form/sign-out-form";
 import { ThemeToggle } from "@/components/mode-toggle";
 import { AuthUser } from "@/types/user.types";
 

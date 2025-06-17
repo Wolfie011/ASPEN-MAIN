@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
 import { signInSchema } from "@/types/auth.type";
-import { signIn } from "@/app/actions/auth.actions";
+import { signIn } from "@/app/actions/auth.action";
 import { toast } from "@/hooks/use-toast";
 import { User, Lock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";

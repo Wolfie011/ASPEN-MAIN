@@ -1,7 +1,7 @@
 "use client";
 
-import { SignInForm } from "@/components/forms/sign-in-form";
-import { SignUpForm } from "@/components/forms/sign-up-form";
+import { SignInForm } from "@/components/form/sign-in-form";
+import { SignUpForm } from "@/components/form/sign-up-form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Image from "next/image";
 

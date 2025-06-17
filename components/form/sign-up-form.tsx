@@ -4,7 +4,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { signUpSchema } from "@/types/auth.type";
-import { signUp } from "@/app/actions/auth.actions";
+import { signUp } from "@/app/actions/auth.action";
 import { toast } from "@/hooks/use-toast";
 import { User, Lock, Mail, UserCircle, Loader2 } from "lucide-react";
 import {

@@ -1,5 +1,5 @@
 import mitt from "mitt";
-import { User } from "@/app/actions/advanced/user.action";
+import { User } from "@/app/actions/user.action";
 import { Role, RolePermission } from "@/types/permission.type";
 
 type Events = {

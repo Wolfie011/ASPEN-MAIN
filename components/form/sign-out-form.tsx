@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { signOut } from "@/app/actions/auth.actions";
+import { signOut } from "@/app/actions/auth.action";
 import { toast } from "@/hooks/use-toast";
 import { LogOut } from "lucide-react"
 export function SignOutForm() {
