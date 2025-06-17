@@ -1,0 +1,88 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "MedicalTech - API",
+    "version": "1.0.0"
+  },
+  "components": {},
+  "paths": {
+    "/api/auth/sign-in": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Authenticate a user and establish a session",
+        "description": "Creates a Lucia session (3 days) and sets an HTTP-only cookie.\n",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignInInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authentication successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/auth/sign-out": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Sign out the current user",
+        "description": "Invalidates the Lucia session, clears the HTTP-only cookie, and removes the session record.\n",
+        "responses": {
+          "200": {
+            "description": "Sign-out successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    }
+  },
+  "tags": []
+}
