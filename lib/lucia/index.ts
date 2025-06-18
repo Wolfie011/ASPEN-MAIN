@@ -1,12 +1,11 @@
 import type { userTable } from "@/lib/database/schema/core/core.schema";
-import { adapter } from "@/lib/lucia/lucia.adapter";
+import luciaAdapter from "@/lib/lucia/lucia.adapter";
 import type { InferSelectModel } from "drizzle-orm";
-// lib/lucia/index.ts
 import { Lucia, TimeSpan } from "lucia";
 
 type DbUser = InferSelectModel<typeof userTable>;
 
-export const auth = new Lucia(adapter, {
+export const auth = new Lucia(luciaAdapter, {
 	sessionExpiresIn: new TimeSpan(3, "d"),
 	sessionCookie: {
 		expires: true,

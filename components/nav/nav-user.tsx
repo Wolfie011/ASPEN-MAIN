@@ -5,7 +5,7 @@ import {
   Bell,
   ChevronsUpDown,
   CreditCard,
-  Sparkles
+  Sparkles,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -16,27 +16,27 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar
+  useSidebar,
 } from "@/components/ui/sidebar";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger
+  TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { SignOutForm } from "@/components/form/sign-out-form";
-import { ThemeToggle } from "@/components/mode-toggle";
-import { AuthUser } from "@/types/user.types";
+import { ThemeToggle } from "@/components/nav/mode-toggle";
+import type { User as LuciaUser } from "lucia";
 
-export  function NavUser({ authUser }: { authUser: AuthUser }) {
+export function NavUser({ authUser }: { authUser: LuciaUser }) {
   const { isMobile } = useSidebar();
-  const {id, userName, firstName, lastName, email} = authUser;
+  const { id, username, firstName, lastName, email } = authUser;
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -51,7 +51,9 @@ export  function NavUser({ authUser }: { authUser: AuthUser }) {
                   >
                     <Avatar className="h-12 w-12 rounded-lg">
                       <AvatarFallback className="rounded-lg">
-                        {(firstName[0] + lastName[0]).toUpperCase()}
+                        {(
+                          (firstName?.[0] ?? "?") + (lastName?.[0] ?? "?")
+                        ).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="grid flex-1 text-left text-sm leading-tight">
@@ -59,7 +61,7 @@ export  function NavUser({ authUser }: { authUser: AuthUser }) {
                         {firstName} {lastName}
                       </span>
                       <span className="truncate text-muted-foreground/90">
-                        {userName}
+                        {username}
                       </span>
                       <span className="truncate text-muted-foreground/90">
                         {email}
@@ -78,7 +80,7 @@ export  function NavUser({ authUser }: { authUser: AuthUser }) {
                   <p className="text-sm">
                     {authUser.firstName} {authUser.lastName}
                   </p>
-                  <p className="text-sm">{authUser.userName}</p>
+                  <p className="text-sm">{authUser.username}</p>
                   <p className="text-sm">{authUser.email}</p>
                 </div>
               </TooltipContent>
@@ -94,7 +96,9 @@ export  function NavUser({ authUser }: { authUser: AuthUser }) {
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-12 w-12 rounded-lg">
                   <AvatarFallback className="rounded-lg">
-                    {(authUser.firstName[0] + authUser.lastName[0]).toUpperCase()}
+                    {(
+                      (firstName?.[0] ?? "?") + (lastName?.[0] ?? "?")
+                    ).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
@@ -102,7 +106,7 @@ export  function NavUser({ authUser }: { authUser: AuthUser }) {
                     {authUser.firstName} {authUser.lastName}
                   </span>
                   <span className="truncate text-muted-foreground/90">
-                    {authUser.userName}
+                    {authUser.username}
                   </span>
                   <span className="truncate text-muted-foreground/90">
                     {authUser.email}

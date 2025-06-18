@@ -1,19 +1,29 @@
 import mitt from "mitt";
-import { User } from "@/app/actions/user.action";
-import { Role, RolePermission } from "@/types/permission.type";
+import { UserDTO } from "@/types/user/types";
+import { ObjectType } from "@/types/object/types";
 
+// Definicja typów zdarzeń aplikacji
 type Events = {
-  userCreated: User;
-  userUpdated: User;
+  // Users
+  userCreated: UserDTO;
+  userUpdated: UserDTO;
   userDeleted: string;
-  openUserDialog: User;
+  openUserDialog: UserDTO;
 
-  roleCreated: Role;
-  roleDeleted: string;
-
-  rolePermissionUpdated: RolePermission;
+  // Objects (organizacja)
+  objectCreated: ObjectType;
+  objectUpdated: ObjectType;
+  objectDeleted: string;
+  objectDeleteRequested: string;
+  objectEditRequested: string;
+  edgeDeleteRequested: {
+    id: string;
+    source: string;
+    target: string;
+  };
 };
 
-const  emitter = mitt<Events>();
+// Globalny emitter typu Events
+const emitter = mitt<Events>();
 
 export default emitter;

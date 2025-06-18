@@ -1,12 +1,17 @@
 "use client";
 
 import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { signUpSchema } from "@/types/auth.type";
-import { signUp } from "@/app/actions/auth.action";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+
+import { signUpSchema } from "@/types/auth/schema";
+import { signIn, signUp } from "@/app/actions/auth.action";
 import { toast } from "@/hooks/use-toast";
+
 import { User, Lock, Mail, UserCircle, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormField,
@@ -15,10 +20,10 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 
 export function SignUpForm() {
+  const router = useRouter();
+
   const form = useForm<z.infer<typeof signUpSchema>>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -33,17 +38,34 @@ export function SignUpForm() {
 
   async function onSubmit(values: z.infer<typeof signUpSchema>) {
     try {
-      const res = await signUp(values);
-      if (res.error) {
-        toast({ variant: "destructive", description: res.error });
-      } else if (res.success) {
-        toast({ variant: "default", description: "Pomyślnie zarejestrowano" });
+      const signUpRes = await signUp(values);
+
+      if (signUpRes.error) {
+        toast({ variant: "destructive", description: signUpRes.error });
+        return;
       }
+
+      toast({ variant: "default", description: "Pomyślnie zarejestrowano" });
+
+      const signInRes = await signIn({
+        userName: values.userName,
+        password: values.password,
+      });
+
+      if (signInRes.error) {
+        toast({
+          variant: "destructive",
+          description: "Rejestracja się udała, ale logowanie nie powiodło się.",
+        });
+        return;
+      }
+
+      router.push("/");
     } catch (error) {
-      console.error("An unexpected error occurred", error);
+      console.error("Unexpected error:", error);
       toast({
         variant: "destructive",
-        description: "Wystąpil nieoczekiwany błąd. Spróbuj ponownie.",
+        description: "Wystąpił nieoczekiwany błąd. Spróbuj ponownie.",
       });
     }
   }
@@ -59,11 +81,8 @@ export function SignUpForm() {
               <FormLabel>Login</FormLabel>
               <FormControl>
                 <div className="relative">
-                  <Input placeholder="Wpisz nazwę użytkownika..." {...field} />
-                  <User
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    size={18}
-                  />
+                  <Input {...field} placeholder="Wpisz nazwę użytkownika..." />
+                  <User className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                 </div>
               </FormControl>
               <FormMessage />
@@ -80,18 +99,14 @@ export function SignUpForm() {
                 <FormLabel>Imię</FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <Input placeholder="Wpisz Imię..." {...field} />
-                    <UserCircle
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                      size={18}
-                    />
+                    <Input {...field} placeholder="Wpisz imię..." />
+                    <UserCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                   </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="lastName"
@@ -100,11 +115,8 @@ export function SignUpForm() {
                 <FormLabel>Nazwisko</FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <Input placeholder="Wpisz Nazwisko..." {...field} />
-                    <UserCircle
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                      size={18}
-                    />
+                    <Input {...field} placeholder="Wpisz nazwisko..." />
+                    <UserCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                   </div>
                 </FormControl>
                 <FormMessage />
@@ -121,11 +133,8 @@ export function SignUpForm() {
               <FormLabel>Email</FormLabel>
               <FormControl>
                 <div className="relative">
-                  <Input placeholder="Wpisz email..." {...field} />
-                  <Mail
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    size={18}
-                  />
+                  <Input {...field} placeholder="Wpisz email..." />
+                  <Mail className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                 </div>
               </FormControl>
               <FormMessage />
@@ -141,15 +150,8 @@ export function SignUpForm() {
               <FormLabel>Hasło</FormLabel>
               <FormControl>
                 <div className="relative">
-                  <Input
-                    type="password"
-                    placeholder="Wpisz hasło..."
-                    {...field}
-                  />
-                  <Lock
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    size={18}
-                  />
+                  <Input {...field} type="password" placeholder="Wpisz hasło..." />
+                  <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                 </div>
               </FormControl>
               <FormMessage />
@@ -165,15 +167,8 @@ export function SignUpForm() {
               <FormLabel>Potwierdź hasło</FormLabel>
               <FormControl>
                 <div className="relative">
-                  <Input
-                    type="password"
-                    placeholder="Potwierdz hasło..."
-                    {...field}
-                  />
-                  <Lock
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    size={18}
-                  />
+                  <Input {...field} type="password" placeholder="Potwierdź hasło..." />
+                  <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                 </div>
               </FormControl>
               <FormMessage />

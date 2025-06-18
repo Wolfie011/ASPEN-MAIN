@@ -20,7 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
-import { activationSchema } from "@/types/auth.type";
+import { activationSchema } from "@/types/auth/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence, motion } from "framer-motion";
 import { KeyRound, Loader2, Lock, Save } from "lucide-react";

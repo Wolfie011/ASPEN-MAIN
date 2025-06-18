@@ -1,9 +1,19 @@
+"use server";
+
 import { and, eq } from "drizzle-orm";
 import db from "@/lib/database/index";
-import { permissionTable, rolePermissionTable, roleTable } from "@/lib/database/schema/core/core.schema";
-import wrap, { authorize, hasPermission } from "@/lib/utils_backend";
-import { ActionResult, ActionResultGeneric } from "@/types/auth.type";
-import { Permission, Role, RolePermission } from "@/types/permission.type";
+import {
+  permissionTable,
+  rolePermissionTable,
+  roleTable,
+} from "@/lib/database/schema/core/core.schema";
+import wrap, { authorize, hasPermission } from "@/lib/server-utils";
+import { ActionResultGeneric } from "@/types/shared/action-result";
+import {
+  Permission,
+  Role,
+  RolePermission,
+} from "@/types/permission/types";
 
 // Pobierz wszystkie role
 export const listRoles = async (): Promise<ActionResultGeneric<Role[]>> =>
@@ -33,7 +43,9 @@ export const listRoles = async (): Promise<ActionResultGeneric<Role[]>> =>
   });
 
 // Pobierz wszystkie uprawnienia
-export const getPermissions = async (): Promise<ActionResultGeneric<Permission[]>> =>
+export const getPermissions = async (): Promise<
+  ActionResultGeneric<Permission[]>
+> =>
   wrap(async () => {
     const requiredPermission = "permission:read:all";
     const { user: authUser } = await authorize();
@@ -59,7 +71,7 @@ export const getPermissions = async (): Promise<ActionResultGeneric<Permission[]
     return { state: "success", success: "Permissions retrieved", data: rows };
   });
 
-// Pobierz role z uprawnieniami
+// Pobierz role z przypisanymi uprawnieniami
 export const listRolePermissions = async (): Promise<
   ActionResultGeneric<RolePermission[]>
 > =>
@@ -71,14 +83,12 @@ export const listRolePermissions = async (): Promise<
       return { state: "error", error: "Insufficient permissions" };
     }
 
-    // Pobierz role, uprawnienia i mapowania
     const [roles, permissions, mappings] = await Promise.all([
       db.select().from(roleTable),
       db.select().from(permissionTable),
       db.select().from(rolePermissionTable),
     ]);
 
-    // Złóż strukturę: dla każdej roli – lista przypisanych uprawnień
     const data: RolePermission[] = roles.map((role) => ({
       id: role.id,
       roleName: role.name,
@@ -98,7 +108,10 @@ export const listRolePermissions = async (): Promise<
   });
 
 // Utwórz rolę
-export const createRole = async (data: { name: string; description?: string }): Promise<ActionResultGeneric<Role>> =>
+export const createRole = async (data: {
+  name: string;
+  description?: string;
+}): Promise<ActionResultGeneric<Role>> =>
   wrap(async () => {
     const requiredPermission = "role:create";
     const { user: authUser } = await authorize();
@@ -119,7 +132,11 @@ export const createRole = async (data: { name: string; description?: string }): 
       return { state: "error", error: "Błąd podczas tworzenia roli." };
     }
 
-    return { state: "success", success: "Role created", data: { id: newRole.id, tag: newRole.name } };
+    return {
+      state: "success",
+      success: "Role created",
+      data: { id: newRole.id, tag: newRole.name },
+    };
   });
 
 // Aktualizuj przypisanie uprawnienia do roli

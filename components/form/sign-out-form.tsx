@@ -1,41 +1,39 @@
-"use client"
+"use client";
+
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { Form } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
+
 import { signOut } from "@/app/actions/auth.action";
 import { toast } from "@/hooks/use-toast";
-import { LogOut } from "lucide-react"
+
+import { LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Form } from "@/components/ui/form";
+
 export function SignOutForm() {
-  const router = useRouter(); // Next.js router for navigation
+  const router = useRouter();
   const signOutForm = useForm();
 
   async function onSubmit() {
     try {
       const res = await signOut();
+
       if (res.error) {
-        toast({
-          variant: "destructive",
-          description: res.error,
-        });
+        toast({ variant: "destructive", description: res.error });
       } else if (res.success) {
-        toast({
-          variant: "default",
-          description: "Signed out successfully",
-        });
-        router.push("/"); // Use `useRouter` for client-side navigation
+        toast({ variant: "default", description: "Wylogowano pomyślnie" });
+        router.push("/");
       }
     } catch (error: unknown) {
-      // Use unknown instead of any
       if (error instanceof Error) {
         toast({
           variant: "destructive",
-          description: `An unexpected error occurred. Please try again.\n ${error.message}`,
+          description: `Wystąpił błąd: ${error.message}`,
         });
       } else {
         toast({
           variant: "destructive",
-          description: "An unexpected error occurred. Please try again.",
+          description: "Wystąpił nieoczekiwany błąd. Spróbuj ponownie.",
         });
       }
     }
@@ -44,9 +42,9 @@ export function SignOutForm() {
   return (
     <Form {...signOutForm}>
       <form onSubmit={signOutForm.handleSubmit(onSubmit)} className="w-full">
-        <Button type="submit" className="w-full">
-            <LogOut />
-            Log out
+        <Button type="submit" className="w-full flex items-center gap-2">
+          <LogOut size={18} />
+          Wyloguj się
         </Button>
       </form>
     </Form>

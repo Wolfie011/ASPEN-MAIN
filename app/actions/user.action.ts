@@ -13,30 +13,20 @@ import {
   objectTable,
   roleTable,
 } from "@/lib/database/schema";
-import wrap, { authorize, hasPermission } from "@/lib/utils_backend";
-import { ActionResultGeneric, SignUpInput, signUpSchema } from "@/types/auth.type";
+import wrap, { authorize, hasPermission } from "@/lib/server-utils";
+import { ActionResultGeneric } from "@/types/shared/action-result";
+import { SignUpInput } from "@/types/auth/types";
+import { signUpSchema } from "@/types/auth/schema";
 import { validate } from "@/lib/utils";
 import bcrypt from "bcryptjs";
-import { UpdateUserInput, updateUserSchema } from "@/types/user.type";
+import { UpdateUserInput, UserDTO } from "@/types/user/types";
+import { updateUserSchema } from "@/types/user/schema";
 
 const BCRYPT_SALT_ROUNDS = 12;
 
-export type User = {
-  id: string;
-  userName: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string | null;
-  active: boolean;
-  roleJob: { id: string; tag: string }[];
-  permissionRole: { id: string; tag: string }[];
-  units: { id: string; tag: string }[];
-};
-
 export const createUser = async (
   input: SignUpInput
-): Promise<ActionResultGeneric<User>> =>
+): Promise<ActionResultGeneric<UserDTO>> =>
   wrap(async () => {
     const requiredPermission = "user:create";
     const { user: authUser } = await authorize();
@@ -95,7 +85,7 @@ export const createUser = async (
 
 export const getUserById = async (
   id: string
-): Promise<ActionResultGeneric<User>> =>
+): Promise<ActionResultGeneric<UserDTO>> =>
   wrap(async () => {
     const requiredPermission = "user:read";
     const { user: authUser } = await authorize();
@@ -155,7 +145,7 @@ export const getUserById = async (
         .where(eq(userUnitTable.userId, id));
 
       // 5) Zbuduj obiekt User
-      const result: User = {
+      const result: UserDTO = {
         id: userRow.id,
         userName: userRow.userName,
         firstName: userRow.firstName,
@@ -175,7 +165,10 @@ export const getUserById = async (
     });
   });
 
-export const listUsers = async (): Promise<ActionResultGeneric<User[]>> =>
+export const listUsers = async (
+  page = 1,
+  pageSize = 20
+): Promise<ActionResultGeneric<{ data: UserDTO[]; total: number }>> =>
   wrap(async () => {
     const requiredPermission = "user:list";
     const { user: authUser } = await authorize();
@@ -187,14 +180,25 @@ export const listUsers = async (): Promise<ActionResultGeneric<User[]>> =>
     }
 
     return await db.transaction(async (tx) => {
-      // 1) Pobierz wszystkich użytkowników
-      const users = await tx.query.userTable.findMany();
-      const userIds = users.map((u) => u.id);
+      // 1) Pobierz wszystkich użytkowników (do obliczenia total)
+      const allUsers = await tx.query.userTable.findMany();
+      const total = allUsers.length;
+
+      // 2) Paginacja
+      const paginatedUsers = allUsers.slice(
+        (page - 1) * pageSize,
+        page * pageSize
+      );
+      const userIds = paginatedUsers.map((u) => u.id);
       if (userIds.length === 0) {
-        return { state: "success", success: "No users found", data: [] };
+        return {
+          state: "success",
+          success: "No users found",
+          data: { data: [], total },
+        };
       }
 
-      // 2) Pobierz wszystkie roleJob dla userIds
+      // 3) Pobierz roleJob
       const roleJobRows = await tx
         .select({
           userId: roleJobUserTable.userId,
@@ -208,7 +212,7 @@ export const listUsers = async (): Promise<ActionResultGeneric<User[]>> =>
         )
         .where(inArray(roleJobUserTable.userId, userIds));
 
-      // 3) Pobierz wszystkie uprawnienia (roleRole) dla userIds
+      // 4) Pobierz uprawnienia
       const roleRows = await tx
         .select({
           userId: userRoleTable.userId,
@@ -216,13 +220,10 @@ export const listUsers = async (): Promise<ActionResultGeneric<User[]>> =>
           tag: roleTable.name,
         })
         .from(userRoleTable)
-        .innerJoin(
-          roleTable,
-          eq(userRoleTable.roleId, roleTable.id)
-        )
+        .innerJoin(roleTable, eq(userRoleTable.roleId, roleTable.id))
         .where(inArray(userRoleTable.userId, userIds));
 
-      // 4) Pobierz wszystkie units
+      // 5) Pobierz jednostki
       const unitRows = await tx
         .select({
           userId: userUnitTable.userId,
@@ -233,7 +234,7 @@ export const listUsers = async (): Promise<ActionResultGeneric<User[]>> =>
         .innerJoin(objectTable, eq(userUnitTable.unitId, objectTable.id))
         .where(inArray(userUnitTable.userId, userIds));
 
-      // 5) Przygotuj mapy relacji
+      // 6) Przygotuj mapy relacji
       const roleJobMap = new Map<string, { id: string; tag: string }[]>();
       const roleMap = new Map<string, { id: string; tag: string }[]>();
       const unitMap = new Map<string, { id: string; tag: string }[]>();
@@ -248,16 +249,14 @@ export const listUsers = async (): Promise<ActionResultGeneric<User[]>> =>
         roleJobMap.get(row.userId)!.push({ id: row.id, tag: row.tag });
       }
       for (const row of roleRows) {
-        roleMap
-          .get(row.userId)!
-          .push({ id: row.id, tag: row.tag });
+        roleMap.get(row.userId)!.push({ id: row.id, tag: row.tag });
       }
       for (const row of unitRows) {
         unitMap.get(row.userId)!.push({ id: row.id, tag: row.tag });
       }
 
-      // 6) Złóż finalną tablicę User[]
-      const result: User[] = users.map((u) => ({
+      // 7) Złóż wynik
+      const result: UserDTO[] = paginatedUsers.map((u) => ({
         id: u.id,
         userName: u.userName,
         firstName: u.firstName,
@@ -273,14 +272,18 @@ export const listUsers = async (): Promise<ActionResultGeneric<User[]>> =>
       return {
         state: "success",
         success: "Users retrieved",
-        data: result,
+        data: {
+          data: result,
+          total,
+        },
       };
     });
   });
 
+
 export const updateUser = async (
   input: UpdateUserInput
-): Promise<ActionResultGeneric<User>> =>
+): Promise<ActionResultGeneric<UserDTO>> =>
   wrap(async () => {
     const requiredPermission = "user:update";
     const { user: authUser } = await authorize();
@@ -371,7 +374,36 @@ export const updateUser = async (
 
     return {
       state: "success",
-      success: "Account updated successfully",
+      success: "Konto pomyślnie zaktualizowane",
       data: updatedUserResult.data,
+    };
+  });
+
+export const deleteUser = async (
+  id: string
+): Promise<ActionResultGeneric<null>> =>
+  wrap(async () => {
+    const requiredPermission = "user:delete";
+    const { user: authUser } = await authorize();
+    if (!authUser) {
+      return { state: "error", error: "Authentication required" };
+    }
+    if (!(await hasPermission(authUser.id, requiredPermission))) {
+      return { state: "error", error: "Insufficient permissions" };
+    }
+
+    const exists = await db.query.userTable.findFirst({
+      where: (t) => eq(t.id, id),
+    });
+    if (!exists) {
+      return { state: "error", error: "User not found" };
+    }
+
+    await db.delete(userTable).where(eq(userTable.id, id)).execute();
+
+    return {
+      state: "success",
+      success: "User deleted successfully",
+      data: null,
     };
   });

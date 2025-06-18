@@ -1,5 +1,6 @@
 import * as React from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 import {
   Sidebar,
@@ -14,39 +15,40 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import { ChevronsUpDown } from "lucide-react";
-import { NavUser } from "./nav-user";
-import { AuthUser } from "@/types/user.types";
+import { NavUser } from "@/components/nav/nav-user";
+import type { User as LuciaUser } from "lucia";
 
-// This is sample data.
+// Przykładowa konfiguracja nawigacji
 const data = {
   navMain: [
     {
       title: "Dashboard",
       url: "/",
       items: [
-        {
-          title: "Użytkownicy",
-          url: "/user",
-          isActive: true,
-        },
-        {
-          title: "Jednostki Organizacyjne",
-          url: "/unit",
-        },
-        {
-          title: "Uprawnienia",
-          url: "/permission",
-        },
+        { title: "Użytkownicy", url: "/users" },
+        { title: "Jednostki Organizacyjne", url: "/organizations" },
+        { title: "Uprawnienia", url: "/permissions" },
       ],
+    },
+    {
+      title: "API DOCS",
+      url: "/api-docs",
+      items: [{ title: "Dokumentacja API", url: "/api-docs" }],
     },
   ],
 };
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
-  authUser: AuthUser;
+  authUser: LuciaUser;
 }
 
 export function AppSidebar({ authUser, ...props }: AppSidebarProps) {
@@ -58,20 +60,21 @@ export function AppSidebar({ authUser, ...props }: AppSidebarProps) {
           className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
         >
           {/* Logo */}
-          <div className="flex aspect-square size-10 items-center justify-center rounded-lg mx-auto bg-sidebar-primary text-sidebar-primary-foreground">
+          <div className="mx-auto flex size-10 aspect-square items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
             <Image
               src="/icon.png"
+              alt="MedicalTech"
               width={64}
               height={64}
-              alt="MedicalTech"
               className="rounded-lg"
             />
           </div>
-          {/* App Title */}
+
+          {/* Tytuł aplikacji z tooltipem */}
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="grid flex-1 text-left text-sm leading-tight cursor-pointer">
+                <div className="grid flex-1 cursor-pointer text-left text-sm leading-tight">
                   <span className="truncate font-semibold">MedicalTech</span>
                   <span className="truncate text-xs">
                     MedicalTech - Management APP
@@ -84,20 +87,21 @@ export function AppSidebar({ authUser, ...props }: AppSidebarProps) {
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
+
           <ChevronsUpDown className="ml-auto" />
         </SidebarMenuButton>
       </SidebarHeader>
+
       <SidebarContent>
-        {/* We create a SidebarGroup for each parent. */}
-        {data.navMain.map((item) => (
-          <SidebarGroup key={item.title}>
-            <SidebarGroupLabel>{item.title}</SidebarGroupLabel>
+        {data.navMain.map((group) => (
+          <SidebarGroup key={group.title}>
+            <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {item.items.map((item) => (
+                {group.items.map((item) => (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={item.isActive}>
-                      <a href={item.url}>{item.title}</a>
+                    <SidebarMenuButton asChild>
+                      <Link href={item.url}>{item.title}</Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
@@ -106,9 +110,11 @@ export function AppSidebar({ authUser, ...props }: AppSidebarProps) {
           </SidebarGroup>
         ))}
       </SidebarContent>
+
       <SidebarFooter>
         <NavUser authUser={authUser} />
       </SidebarFooter>
+
       <SidebarRail />
     </Sidebar>
   );

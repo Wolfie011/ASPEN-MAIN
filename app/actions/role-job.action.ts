@@ -2,18 +2,15 @@
 
 import { eq } from "drizzle-orm";
 import db from "@/lib/database";
-import { roleJobTable } from "@/lib/database/schema";
-import wrap, { authorize, hasPermission } from "@/lib/utils_backend";
-import { ActionResultGeneric } from "@/types/auth.type";
+import { roleJobTable } from "@/lib/database/schema/core/core.schema";
+import wrap, { authorize, hasPermission } from "@/lib/server-utils";
+import { ActionResultGeneric } from "@/types/shared/action-result";
+import { roleJob } from "@/types/user/types";
 
-export type RoleJob = {
-  id: string;
-  name: string;
-};
-
+// Stwórz nowy RoleJob
 export const createRoleJob = async (
   input: { name: string }
-): Promise<ActionResultGeneric<RoleJob>> =>
+): Promise<ActionResultGeneric<{ id: string; tag: string }>> =>
   wrap(async () => {
     const requiredPermission = "roleJob:create";
     const { user: authUser } = await authorize();
@@ -22,7 +19,6 @@ export const createRoleJob = async (
       return { state: "error", error: "Insufficient permissions" };
     }
 
-    // Sprawdź czy nazwa już istnieje
     const exists = await db.query.roleJobTable.findFirst({
       where: (r) => eq(r.name, input.name),
     });
@@ -35,12 +31,17 @@ export const createRoleJob = async (
       .values({ name: input.name })
       .returning();
 
-    return { state: "success", success: "RoleJob created", data: newRoleJob };
+    return {
+      state: "success",
+      success: "RoleJob created",
+      data: { id: newRoleJob.id, tag: newRoleJob.name },
+    };
   });
 
+// Pobierz RoleJob po ID
 export const getRoleJobById = async (
   id: string
-): Promise<ActionResultGeneric<RoleJob>> =>
+): Promise<ActionResultGeneric<{ id: string; tag: string }>> =>
   wrap(async () => {
     const requiredPermission = "roleJob:read";
     const { user: authUser } = await authorize();
@@ -56,12 +57,17 @@ export const getRoleJobById = async (
       return { state: "error", error: "RoleJob not found" };
     }
 
-    return { state: "success", success: "RoleJob found", data: roleJob };
+    return {
+      state: "success",
+      success: "RoleJob found",
+      data: { id: roleJob.id, tag: roleJob.name },
+    };
   });
 
+// Zaktualizuj RoleJob
 export const updateRoleJob = async (
   input: { id: string; name: string }
-): Promise<ActionResultGeneric<RoleJob>> =>
+): Promise<ActionResultGeneric<{ id: string; tag: string }>> =>
   wrap(async () => {
     const requiredPermission = "roleJob:update";
     const { user: authUser } = await authorize();
@@ -77,7 +83,6 @@ export const updateRoleJob = async (
       return { state: "error", error: "RoleJob not found" };
     }
 
-    // Sprawdź, czy nowa nazwa nie koliduje (chyba że jest taka sama)
     if (input.name !== existing.name) {
       const nameExists = await db.query.roleJobTable.findFirst({
         where: (r) => eq(r.name, input.name),
@@ -93,9 +98,14 @@ export const updateRoleJob = async (
       .where(eq(roleJobTable.id, input.id))
       .returning();
 
-    return { state: "success", success: "RoleJob updated", data: updatedRoleJob };
+    return {
+      state: "success",
+      success: "RoleJob updated",
+      data: { id: updatedRoleJob.id, tag: updatedRoleJob.name },
+    };
   });
 
+// Usuń RoleJob
 export const deleteRoleJob = async (
   id: string
 ): Promise<ActionResultGeneric> =>
@@ -118,7 +128,10 @@ export const deleteRoleJob = async (
     return { state: "success", success: "RoleJob deleted" };
   });
 
-export const listRoleJobs = async (): Promise<ActionResultGeneric<RoleJob[]>> =>
+// Pobierz wszystkie RoleJob
+export const listRoleJobs = async (): Promise<
+  ActionResultGeneric<{ id: string; tag: string }[]>
+> =>
   wrap(async () => {
     const requiredPermission = "roleJob:list";
     const { user: authUser } = await authorize();
@@ -127,6 +140,16 @@ export const listRoleJobs = async (): Promise<ActionResultGeneric<RoleJob[]>> =>
       return { state: "error", error: "Insufficient permissions" };
     }
 
-    const roles = await db.select().from(roleJobTable);
-    return { state: "success", success: "RoleJobs retrieved", data: roles };
+    const roles = await db
+      .select({
+        id: roleJobTable.id,
+        tag: roleJobTable.name,
+      })
+      .from(roleJobTable);
+
+    return {
+      state: "success",
+      success: "RoleJobs retrieved",
+      data: roles,
+    };
   });

@@ -8,20 +8,29 @@ import {
   rolePermissionTable,
   userRoleTable,
 } from "@/lib/database/schema/core/core.schema";
-import { config } from "dotenv";
-import { ActionResult } from "@/types/auth.type";
+import { ActionResult } from "@/types/shared/action-result";
 import { ValidationError } from "./utils";
 
-export async function authorize() {
-	const cookieStore = await cookies();
-	const sessionCookieValue = cookieStore.get("auth_session")?.value || "";
-	return auth.validateSession(sessionCookieValue);
-}
-
-config();
+/**
+ * Initializes `.env` loading – unnecessary in Next.js 14
+ * since it's handled at build time by default.
+ * You can remove dotenv unless you're running scripts directly with ts-node.
+ */
+// import { config } from "dotenv";
+// config();
 
 // Toggle permission checks via env var
 const isPermissionEnabled = process.env.PERMISSION_ENABLED === "true";
+
+/**
+ * Authorize user session using lucia auth and cookies.
+ * Note: `cookies()` is still valid in server-only context (Next.js 14+).
+ */
+export async function authorize() {
+  const cookieStore = cookies();
+  const sessionCookieValue = cookieStore.get("auth_session")?.value || "";
+  return auth.validateSession(sessionCookieValue);
+}
 
 /**
  * Checks if a user has a specific permission.
@@ -49,6 +58,9 @@ export async function hasPermission(
   return result.length > 0;
 }
 
+/**
+ * Wrapper to handle known and unknown errors safely.
+ */
 export default async function wrap(fn: () => Promise<ActionResult>): Promise<ActionResult> {
   try {
     return await fn();
